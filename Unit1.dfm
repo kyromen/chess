@@ -12,6 +12,7 @@ object Form1: TForm1
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  Visible = True
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
@@ -24,7 +25,7 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = StartuemClick
   end
-  object board: TImageList
+  object deskSprites: TImageList
     AllocBy = 56
     Height = 56
     Width = 56
@@ -8123,7 +8124,7 @@ object Form1: TForm1
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000}
   end
-  object shapes: TImageList
+  object shapesSprites: TImageList
     AllocBy = 56
     Height = 56
     Width = 56
@@ -14604,5 +14605,11 @@ object Form1: TForm1
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 216
+    Top = 232
   end
 end
