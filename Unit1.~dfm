@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 477
   Top = 151
-  BorderStyle = bsDialog
+  BorderStyle = bsNone
   Caption = 'Form'
   ClientHeight = 448
   ClientWidth = 448
@@ -14605,11 +14605,5 @@ object Form1: TForm1
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
-  end
-  object Timer1: TTimer
-    Enabled = False
-    OnTimer = Timer1Timer
-    Left = 216
-    Top = 232
   end
 end

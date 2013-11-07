@@ -26,7 +26,8 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
                 case VK_UP : if (y > 0){y-=1;} break;
                 case VK_RIGHT : if (x < 7){x+=1;} break;
                 case VK_DOWN : if (y < 7){y+=1;} break;
-                case 27: Startuem->Visible=true; break;
+                case 82: Startuem->Visible=true; break;
+                case 27: Close(); break;
         }
         Draw();
 }
@@ -54,7 +55,6 @@ void TForm1::Draw(void)
 void __fastcall TForm1::StartuemClick(TObject *Sender)
 {
         Startuem->Visible=false;
-        Graphics::TBitmap * bmpCurrent = new Graphics::TBitmap;
         int wb = 1;
         for (int i=0; i<8; i++)
         {
@@ -62,19 +62,12 @@ void __fastcall TForm1::StartuemClick(TObject *Sender)
                 for (int j=0; j<8; j++)
                 {
                         desk[i][j] = wb*8 + rand()%8;
-                        deskSprites->GetBitmap(desk[i][j], bmpCurrent);
-                        Canvas->Draw(i*56, j*56, bmpCurrent);
                         wb = (wb + 1) % 2;
                 }
         }
         x = 0, y = 0;
-        Timer1->Enabled=true;
+        Draw();
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TForm1::Timer1Timer(TObject *Sender)
-{
-       Draw();
-}
-//---------------------------------------------------------------------------
 

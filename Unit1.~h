@@ -16,11 +16,9 @@ __published:	// IDE-managed Components
         TImageList *deskSprites;
         TImageList *shapesSprites;
         TButton *Startuem;
-        TTimer *Timer1;
         void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
         void __fastcall StartuemClick(TObject *Sender);
-        void __fastcall Timer1Timer(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
