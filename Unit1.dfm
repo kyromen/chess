@@ -18,22 +18,7 @@ object Form1: TForm1
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
-  object Image1: TImage
-    Left = 0
-    Top = 0
-    Width = 448
-    Height = 448
-    Visible = False
-  end
-  object Image2: TImage
-    Left = 0
-    Top = 0
-    Width = 448
-    Height = 448
-    Transparent = True
-    Visible = False
-  end
-  object Image4: TImage
+  object View: TImage
     Left = 0
     Top = 0
     Width = 448
@@ -48,7 +33,7 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = StartuemClick
   end
-  object deskSprites: TImageList
+  object DeskSprites: TImageList
     AllocBy = 56
     Height = 56
     Width = 56
@@ -8147,7 +8132,7 @@ object Form1: TForm1
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000}
   end
-  object shapesSprites: TImageList
+  object ShapesSprites: TImageList
     AllocBy = 56
     DrawingStyle = dsTransparent
     Height = 56

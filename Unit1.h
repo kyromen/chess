@@ -13,12 +13,10 @@
 class TForm1 : public TForm
 {
 __published:	// IDE-managed Components
-        TImageList *deskSprites;
-        TImageList *shapesSprites;
+        TImageList *DeskSprites;
+        TImageList *ShapesSprites;
         TButton *Startuem;
-        TImage *Image1;
-        TImage *Image2;
-        TImage *Image4;
+        TImage *View;
         void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
         void __fastcall StartuemClick(TObject *Sender);
