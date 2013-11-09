@@ -16,13 +16,24 @@ __published:	// IDE-managed Components
         TImageList *deskSprites;
         TImageList *shapesSprites;
         TButton *Startuem;
+        TImage *Image1;
+        TImage *Image2;
+        TImage *Image4;
         void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
         void __fastcall StartuemClick(TObject *Sender);
+        void __fastcall Image4Click(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
         void Draw(void);
+        void RedrawShapes(void);
+        void MoveShape(void);
+        void EatShape(struct Shape *);
+        Shape * GetObjectUnderCursor(void);
+        void GetPosibleSteps(void);
+        int CheckPoint(struct Point);
+        void Initialize(void);
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TForm1 *Form1;
