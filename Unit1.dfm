@@ -24,15 +24,6 @@ object Form1: TForm1
     Width = 448
     Height = 448
   end
-  object Startuem: TButton
-    Left = 120
-    Top = 208
-    Width = 200
-    Height = 25
-    Caption = 'Startuem'
-    TabOrder = 0
-    OnClick = StartuemClick
-  end
   object DeskSprites: TImageList
     AllocBy = 56
     Height = 56

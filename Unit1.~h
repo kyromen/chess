@@ -9,28 +9,29 @@
 #include <Forms.hpp>
 #include <ImgList.hpp>
 #include <ExtCtrls.hpp>
+#include <Graphics.hpp>
 //---------------------------------------------------------------------------
 class TForm1 : public TForm
 {
 __published:	// IDE-managed Components
         TImageList *DeskSprites;
         TImageList *ShapesSprites;
-        TButton *Startuem;
         TImage *View;
         void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
-        void __fastcall StartuemClick(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
-        void Draw(void);
-        void RedrawShapes(void);
-        void MoveShape(void);
-        void EatShape(struct Shape *);
-        Shape * GetObjectUnderCursor(void);
-        void GetPosibleSteps(void);
+        void Draw();
+        void RedrawShapes();
+        void MoveShape();
+        void GetPossibleSteps();
         int CheckPoint(struct Point);
-        void Initialize(void);
+        void NewGame();
+        void CheckShah();
+        void CheckSteps();
+        void CheckWinOrStandoff();
+        struct Shape* GetObjectFromPoint(struct Point);
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TForm1 *Form1;

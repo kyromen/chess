@@ -13,11 +13,6 @@ struct Point
   int x;
   int y;
 };
-struct WhereGo
-{
-  int d;
-  int g;
-};
 struct Shape
 {
   struct Point point;
@@ -25,25 +20,30 @@ struct Shape
   int player;
   int shapeId;
   bool isActive;
-  struct WhereGo whereGo;
 };
 
 struct Point cursor;
 struct Shape shapes[2][16];
 
-struct Point *isPosibleSteps = (struct Point *)malloc(32*sizeof(struct Point));
-struct Point *isPosibleEats = (struct Point *)malloc(8*sizeof(struct Point));
-int countOfPosible[2];
+struct Point *possibleSteps = (struct Point *)malloc(32*sizeof(struct Point));
+struct Point *possibleEats = (struct Point *)malloc(8*sizeof(struct Point));
+int countOfPossible[2];
 
 struct Shape * currentShape = NULL;
 int currentPlayer = 1;
 
+bool isShah = false;
+bool isStandoff = false;
+bool isWin = false;
+
 Graphics::TBitmap *backgroundLayer = new Graphics::TBitmap;
 Graphics::TBitmap *shapesLayer = new Graphics::TBitmap;
-
+Graphics::TBitmap *transferLayer = new Graphics::TBitmap;
+Graphics::TBitmap *popupList = new Graphics::TBitmap;
+Graphics::TBitmap *popup = new Graphics::TBitmap;
 Graphics::TBitmap *bmpCurrent;
 
-int x, y; //readability ++
+int x, y; //readability++
 
 TForm1 *Form1;
 
@@ -52,11 +52,21 @@ __fastcall TForm1::TForm1(TComponent* Owner)
         : TForm(Owner)
 {
         DoubleBuffered=true;
+        
         backgroundLayer->Width=448;
         backgroundLayer->Height=448;
         shapesLayer->Width=448;
         shapesLayer->Height=448;
         shapesLayer->Transparent=true;
+        transferLayer->Width=448;
+        transferLayer->Height=448;
+        popupList->LoadFromFile("graphics/popup.bmp");
+        popupList->TransparentColor=clBlack;
+        popupList->Transparent=true;
+        popup->Width=190;
+        popup->Height=81;
+        popup->Transparent=true;
+        NewGame();
 }
 
 
@@ -65,28 +75,28 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
 {
         switch(Key)
         {
-                case VK_LEFT : if (cursor.x > 0){cursor.x-=1;} break;
-                case VK_UP : if (cursor.y > 0){cursor.y-=1;} break;
-                case VK_RIGHT : if (cursor.x < 7){cursor.x+=1;} break;
-                case VK_DOWN : if (cursor.y < 7){cursor.y+=1;} break;
+                case VK_LEFT : if (cursor.x > 0){cursor.x -= 1;} break;
+                case VK_UP : if (cursor.y > 0){cursor.y -= 1;} break;
+                case VK_RIGHT : if (cursor.x < 7){cursor.x += 1;} break;
+                case VK_DOWN : if (cursor.y < 7){cursor.y += 1;} break;
                 case VK_ESCAPE: Close(); break;
-                case 82: Startuem->Visible=true; break;
+                case 82: NewGame(); break;
                 case VK_SPACE:
                         Shape * objectUnderCursor;
-                        objectUnderCursor = GetObjectUnderCursor();
-                        if (objectUnderCursor != NULL) //shape under cursor
+                        objectUnderCursor = GetObjectFromPoint(cursor);
+                         if (objectUnderCursor != NULL) //shape under cursor
                         {
                                 if (objectUnderCursor->player == currentPlayer)
                                 {
                                         if (currentShape == NULL)
                                         {
                                                 currentShape = objectUnderCursor;
-                                                GetPosibleSteps();
+                                                CheckSteps();
                                         }
                                         else
                                         {
-                                                countOfPosible[0] = 0;
-                                                countOfPosible[1] = 0;
+                                                countOfPossible[0] = 0;
+                                                countOfPossible[1] = 0;
                                                 if (cursor.x == currentShape->point.x && cursor.y == currentShape->point.y)
                                                 {
                                                         currentShape = NULL;
@@ -94,16 +104,16 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
                                                 else
                                                 {
                                                         currentShape = objectUnderCursor;
-                                                        GetPosibleSteps();
+                                                        CheckSteps();
                                                 }
                                         }
                                 }
                                 else if (objectUnderCursor->player != currentPlayer && currentShape != NULL)
                                 {
-                                        for (int i=0; i<countOfPosible[1]; i++)
+                                        for (int i=0; i<countOfPossible[1]; i++)
                                         {
-                                                x = isPosibleEats[i].x;
-                                                y = isPosibleEats[i].y;
+                                                x = possibleEats[i].x;
+                                                y = possibleEats[i].y;
                                                 if (cursor.x == x && cursor.y == y)
                                                 {
                                                         objectUnderCursor->isActive=false; //delete shape
@@ -116,10 +126,10 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
                         {
                                 if (currentShape != NULL && currentShape->player == currentPlayer)
                                 {
-                                        for (int i=0; i<countOfPosible[0]; i++)
+                                        for (int i=0; i<countOfPossible[0]; i++)
                                         {
-                                                x = isPosibleSteps[i].x;
-                                                y = isPosibleSteps[i].y;
+                                                x = possibleSteps[i].x;
+                                                y = possibleSteps[i].y;
                                                 if (cursor.x == x && cursor.y == y)
                                                 {
                                                         MoveShape();
@@ -129,29 +139,19 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
                         }
         }
         Draw();
+        isShah = false;
 }
 
-
-void __fastcall TForm1::StartuemClick(TObject *Sender)
-{
-        //hide button
-        Startuem->Visible=false;
-        Form1->Refresh();
-
-        Initialize();
-
-        RedrawShapes();
-        Draw();
-}
-
-
-void TForm1::Initialize(void)
+void TForm1::NewGame()
 {
         //white player
         currentPlayer = 1;
+        isWin = false;
+        isShah = false;
+        isStandoff = false;
 
         //cursor
-        cursor.x = 0, cursor.y = 0;
+        cursor.x = 3, cursor.y = 4;
 
         //desk
         int wb = 1;
@@ -194,16 +194,6 @@ void TForm1::Initialize(void)
                         shapes[i][8+j].isActive = true;
                         shapes[i][8+j].player = i;
                         shapes[i][8+j].shapeId = 3 - j%3;
-                        if (j == 2)
-                        {
-                                shapes[i][8+j].whereGo.d = 2;
-                                shapes[i][8+j].whereGo.g = 0;
-                        }
-                        if (j == 0)
-                        {
-                                shapes[i][8+j].whereGo.d = 0;
-                                shapes[i][8+j].whereGo.g = 2;
-                        }
                 }
                 for (int j=0; j<3; j++)
                 {
@@ -213,16 +203,6 @@ void TForm1::Initialize(void)
                         shapes[i][11+j].isActive = true;
                         shapes[i][11+j].player = i;
                         shapes[i][11+j].shapeId = 3 - j%3;
-                        if (j == 2)
-                        {
-                                shapes[i][11+j].whereGo.d = 2;
-                                shapes[i][11+j].whereGo.g = 0;
-                        }
-                        if (j == 0)
-                        {
-                                shapes[i][11+j].whereGo.d = 0;
-                                shapes[i][11+j].whereGo.g = 2;
-                        }
                 }
         }
 
@@ -237,64 +217,78 @@ void TForm1::Initialize(void)
                         shapes[i][14+j].isActive = true;
                         shapes[i][14+j].player = i;
                         shapes[i][14+j].shapeId = 5 - (i+j)%2;
-                        if ((i+j)%2 == 1)
-                        {
-                                shapes[i][14+j].whereGo.d = 2;
-                                shapes[i][14+j].whereGo.g = 2;
-                        }
                 }
         }
+
+        RedrawShapes();
+        Draw();
 }
 
 
-void TForm1::Draw(void)
+void TForm1::Draw()
 {
         //desk
-        View->Canvas->CopyRect(Rect(0,0,448,448), backgroundLayer->Canvas, Rect(0, 0, 448, 448));
+        transferLayer->Canvas->CopyRect(Rect(0,0,448,448), backgroundLayer->Canvas, Rect(0, 0, 448, 448));
 
         //current shape
         if (currentShape != NULL)
         {
                 x = currentShape->point.x;
                 y = currentShape->point.y;
-                View->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
+                transferLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
         }
 
         //posible steps
-        if (countOfPosible[0] != 0)
+        if (countOfPossible[0] != 0)
         {
-                View->Canvas->Brush->Color=clGreen;
-                for (int i=0; i < countOfPosible[0]; i++)
+                transferLayer->Canvas->Brush->Color=clGreen;
+                for (int i=0; i<countOfPossible[0]; i++)
                 {
-                        x = isPosibleSteps[i].x;
-                        y = isPosibleSteps[i].y;
-                        View->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
+                        x = possibleSteps[i].x;
+                        y = possibleSteps[i].y;
+                        transferLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
                 }
         }
-        if (countOfPosible[1] != 0)
+        if (countOfPossible[1] != 0)
         {
-                View->Canvas->Brush->Color=clRed;
-                for (int i=0; i < countOfPosible[1]; i++)
+                transferLayer->Canvas->Brush->Color=clRed;
+                for (int i=0; i<countOfPossible[1]; i++)
                 {
-                        x = isPosibleEats[i].x;
-                        y = isPosibleEats[i].y;
-                        View->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
+                        x = possibleEats[i].x;
+                        y = possibleEats[i].y;
+                        transferLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
                 }
         }
 
         //cursor
         x = cursor.x;
         y = cursor.y;
-        View->Canvas->Brush->Color=clYellow;
-        View->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
+        transferLayer->Canvas->Brush->Color=clYellow;
+        transferLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
 
         //shapes
-        View->Canvas->Draw(0,0, shapesLayer);
+        transferLayer->Canvas->Draw(0,0, shapesLayer);
+
+        //popup
+        if (isWin) {
+                popup->Canvas->CopyRect(Rect(0,0,190,81), popupList->Canvas, Rect(0,0*81,190,1*81));
+        }
+        else if (isShah) {
+                popup->Canvas->CopyRect(Rect(0,0,190,81), popupList->Canvas, Rect(0,1*81,190,2*81));
+        }
+        else if (isStandoff) {
+                popup->Canvas->CopyRect(Rect(0,0,190,81), popupList->Canvas, Rect(0,2*81,190,3*81));
+
+        }
+        if (isWin || isShah || isStandoff) {transferLayer->Canvas->Draw(448/2-190/2,448/2-81/2,popup);}
+
+        //all on view
+        View->Canvas->Draw(0, 0, transferLayer);
 }
 
-void TForm1::RedrawShapes(void)
+void TForm1::RedrawShapes()
 {
-        //fill all
+        //fill bitmap
         shapesLayer->Canvas->Brush->Color=clSilver;
         shapesLayer->Canvas->FillRect(Rect(0, 0, 448, 448));
 
@@ -305,111 +299,88 @@ void TForm1::RedrawShapes(void)
                         if (shapes[i][j].isActive == true)
                         {
                                 bmpCurrent = new Graphics::TBitmap;
-
-                                //shape
+                                
                                 ShapesSprites->GetBitmap(shapes[i][j].imageIndex, bmpCurrent);
-                                bmpCurrent->TransparentColor=clWhite;
+                                bmpCurrent->TransparentColor=clSilver;
                                 bmpCurrent->Transparent=true;
-
-                                //substrate
                                 x = shapes[i][j].point.x;
                                 y = shapes[i][j].point.y;
-                                shapesLayer->Canvas->Brush->Color=clWhite;
-                                shapesLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));
-
                                 shapesLayer->Canvas->Draw(x*56, y*56, bmpCurrent);
-
                                 delete bmpCurrent;
                         }
                 }
         }
 }
 
-void TForm1::MoveShape(void)
+void TForm1::MoveShape()
 {
         //move
         currentShape->point.x = cursor.x;
         currentShape->point.y = cursor.y;
 
-        //upgrade
-        if (currentShape->shapeId == 0 && currentShape->point.y == (7*((currentPlayer+1)%2)))
+        //upgrade pawn
+        y = 7*((currentPlayer+1)%2);
+        if (currentShape->shapeId == 0 && currentShape->point.y == y)
         {
                 currentShape->shapeId = 4;
                 currentShape->imageIndex = 6*currentPlayer + 4;
-                currentShape->whereGo.d = 2;
-                currentShape->whereGo.g = 2;
         }
-
-        //fresh
-        currentShape = NULL;
+        
         currentPlayer = (currentPlayer+1) % 2;
-        countOfPosible[0] = 0;
-        countOfPosible[1] = 0;
+        currentShape = (struct Shape *)malloc(sizeof(struct Shape));
 
         RedrawShapes();
+
+        CheckShah();
+        CheckWinOrStandoff();
+
+        currentShape = NULL;
+        countOfPossible[0] = 0;
+        countOfPossible[1] = 0;
 }
 
-
-Shape * TForm1::GetObjectUnderCursor(void)
+void TForm1::GetPossibleSteps()
 {
-        for (int i = 0; i < 2; i++)
-        {
-                for (int j = 0; j < 16; j++)
-                {
-                        if (shapes[i][j].isActive == true)
-                        {
-                                x = shapes[i][j].point.x;
-                                y = shapes[i][j].point.y;
-                                if (x == cursor.x && y == cursor.y)
-                                {
-                                        return &shapes[i][j];
-                                }
-                        }
-                }
-        }
-        return NULL;
-}
-
-void TForm1::GetPosibleSteps(void)
-{
-        struct Point points[8];
         struct Point point;
+        struct Point points[8];
         
         //left right up down \left \right /left /right
         struct Point stepDirection[8] = {{-1, 0},{1, 0},{0, -1},{0, 1},{-1, -1},{1, 1},{-1, 1}, {1, -1}};
-        int posibleDirection[8];
+        bool possibleDirection[8];
 
-        int index[2] = {0, 0};
-        int rtrn;
+        int index[2] = {0, 0}; //count of possible steps (steps/eats)
+        int rtrn = 0;
 
         if (currentShape->shapeId == 0)
         {
+                bool stop = false;
                 for (int i=0; i<2; i++)
                 {
-                        if ((abs(currentPlayer*7 - currentShape->point.y))*i < 2) //first step or not
+                        if (((abs(currentPlayer*7 - currentShape->point.y))*i < 2) && !stop) //first step or not
                         {
                                 point.x = currentShape->point.x;
                                 point.y = currentShape->point.y + stepDirection[2].y*(1+i) - 2*((currentPlayer+1)%2)*stepDirection[2].y*(1+i); //mirror algoritm
                                 rtrn = CheckPoint(point);
                                 if (rtrn == -1) //empty cell
                                 {
-                                        isPosibleSteps[index[0]] = point;
+                                        possibleSteps[index[0]] = point;
                                         index[0] += 1;
                                 }
+                                else {stop = true;}
                         }
                         point.x = currentShape->point.x + stepDirection[4+3*i].x;
                         point.y = currentShape->point.y + stepDirection[4+3*i].y - 2*((currentPlayer+1)%2)*stepDirection[4+3*i].y;
                         rtrn = CheckPoint(point);
                         if (rtrn != currentPlayer && rtrn != -1)
                         {
-                                isPosibleEats[index[1]] = point;
+                                possibleEats[index[1]] = point;
                                 index[1] += 1;
                         }
                 }
         }
         else if (currentShape->shapeId == 2)
         {
-                struct Point directionStep[8] = {{1,2},{1,-2},{-1,2},{-1,-2},{2,1},{2,-1},{-2,1},{-2,1}};
+                struct Point directionStep[8] = {{1,2},{1,-2},{-1,2},{-1,-2},{2,1},{2,-1},{-2,1},{-2,-1}};
                 for (int i=0; i<8; i++)
                 {
                         point.x = currentShape->point.x + directionStep[i].x;
@@ -418,12 +389,12 @@ void TForm1::GetPosibleSteps(void)
                         rtrn = CheckPoint(point);
                         if (rtrn == -1)
                         {
-                                isPosibleSteps[index[0]] = point;
+                                possibleSteps[index[0]] = point;
                                 index[0] += 1;
                         }
                         else if (rtrn != currentPlayer)
                         {
-                                isPosibleEats[index[1]] = point;
+                                possibleEats[index[1]] = point;
                                 index[1] += 1;
                         }
                 }
@@ -435,20 +406,17 @@ void TForm1::GetPosibleSteps(void)
                         point.x = currentShape->point.x + stepDirection[j].x;
                         point.y = currentShape->point.y + stepDirection[j].y;
 
-                        if (point.x < 0 || point.x > 8 || point.y < 0 || point.y > 7)
-                        {
-                                continue;
-                        }
+                        if (point.x < 0 || point.x > 7 || point.y < 0 || point.y > 7) {continue;}
 
                         rtrn = CheckPoint(point);
                         if (rtrn == -1)
                         {
-                                isPosibleSteps[index[0]] = point;
+                                possibleSteps[index[0]] = point;
                                 index[0] += 1;
                         }
                         else if (rtrn != currentPlayer)
                         {
-                                isPosibleEats[index[1]] = point;
+                                possibleEats[index[1]] = point;
                                 index[1] += 1;
                         }
                 }
@@ -459,22 +427,22 @@ void TForm1::GetPosibleSteps(void)
                 {
                         if ((currentShape->shapeId == 3 || currentShape->shapeId == 4)&& i < 4)
                         {
-                                posibleDirection[i] = 1;
+                                possibleDirection[i] = 1;
                         }
                         else if ((currentShape->shapeId == 1 || currentShape->shapeId == 4) && i > 3)
                         {
-                                posibleDirection[i] = 1;
+                                possibleDirection[i] = 1;
                         }
                         else
                         {
-                                posibleDirection[i] = 0;
+                                possibleDirection[i] = 0;
                         }
                 }
                 for (int i=1; i<8; i++)
                 {
                         for (int j=0; j<8; j++)
                         {
-                                if (posibleDirection[j] == 1)
+                                if (possibleDirection[j] == 1)
                                 {
                                         point.x = currentShape->point.x + stepDirection[j].x*i;
                                         point.y = currentShape->point.y + stepDirection[j].y*i;
@@ -485,34 +453,34 @@ void TForm1::GetPosibleSteps(void)
                         //check points
                         for (int j=0; j<8; j++)
                         {
-                                if (points[j].x < 0 || points[j].x > 8 || points[j].y < 0 || points[j].y > 7)
+                                if (points[j].x < 0 || points[j].x > 7 || points[j].y < 0 || points[j].y > 7)
                                 {
-                                        posibleDirection[j] = 0;
+                                        possibleDirection[j] = 0;
                                         continue;
                                 }
-                                if (posibleDirection[j] == 1)
+                                if (possibleDirection[j] == 1)
                                 {
                                         rtrn = CheckPoint(points[j]);
                                         if (rtrn == -1)
                                         {
-                                                isPosibleSteps[index[0]] = points[j];
+                                                possibleSteps[index[0]] = points[j];
                                                 index[0] += 1;
                                         }
                                         else
                                         {
                                                 if (rtrn != currentPlayer)
                                                 {
-                                                        isPosibleEats[index[1]] = points[j];
+                                                        possibleEats[index[1]] = points[j];
                                                         index[1] += 1;
                                                 }
-                                                posibleDirection[j] = 0;
+                                                possibleDirection[j] = 0;
                                         }
                                 }
                         }
                 }
         }
-        countOfPosible[0] = index[0];
-        countOfPosible[1] = index[1];
+        countOfPossible[0] = index[0];
+        countOfPossible[1] = index[1];
 }
 
 
@@ -533,3 +501,167 @@ int TForm1::CheckPoint(struct Point point)
         }
         return -1;
 }
+
+void TForm1::CheckShah()
+{
+        isShah = false;
+
+        //store global state
+        struct Point *savedPossibleSteps = (struct Point *)malloc(countOfPossible[0]*sizeof(struct Point));
+        struct Point *savedPossibleEats = (struct Point *)malloc(countOfPossible[1]*sizeof(struct Point));
+        int savedCountOfPossible[2];
+        int savedCurrentPlayer = currentPlayer;
+
+        for (int i=0; i<countOfPossible[0]; i++)
+        {
+                savedPossibleSteps[i] = possibleSteps[i];
+        }
+        for (int i=0; i<countOfPossible[1]; i++)
+        {
+                savedPossibleEats[i] = possibleEats[i];
+        }
+        savedCountOfPossible[0] = countOfPossible[0];
+        savedCountOfPossible[1] = countOfPossible[1];
+
+        currentPlayer = (currentPlayer+1)%2;
+        for (int j=0; j<16; j++)
+        {
+                *currentShape = shapes[currentPlayer][j];
+                if (currentShape->isActive == false){continue;}
+                GetPossibleSteps();
+                //king
+                x = shapes[(currentPlayer+1)%2][14+(currentPlayer+1)%2].point.x;
+                y = shapes[(currentPlayer+1)%2][14+(currentPlayer+1)%2].point.y;
+
+                for (int index=0; index<countOfPossible[1]; index++)
+                {
+                        if (possibleEats[index].x == x && possibleEats[index].y == y)
+                        {
+                                isShah = true;
+                                break;
+                        }
+                }
+        }
+
+        //restore global state
+        currentPlayer = savedCurrentPlayer;
+
+        for (int i=0; i<savedCountOfPossible[0]; i++)
+        {
+                possibleSteps[i] = savedPossibleSteps[i];
+        }
+        for (int i=0; i<savedCountOfPossible[1]; i++)
+        {
+                possibleEats[i] = savedPossibleEats[i];
+        }
+        countOfPossible[0] = savedCountOfPossible[0];
+        countOfPossible[1] = savedCountOfPossible[1];
+
+        free(savedPossibleSteps);
+        free(savedPossibleEats);
+}
+
+void TForm1::CheckSteps()
+{
+        struct Shape *emptyAddress = (struct Shape *)malloc(sizeof(struct Shape));
+        struct Point *updatePossibleSteps = (struct Point *)malloc(32*sizeof(struct Point));
+        struct Point *updatePossibleEats = (struct Point *)malloc(8*sizeof(struct Point));
+        struct Shape *killedShape = (struct Shape *)malloc(sizeof(struct Shape));
+        int index[2] = {0,0};
+
+        //store global state
+        struct Shape *savedCurrentShapeAddress = currentShape;
+        struct Shape *savedCurrentShapeValue = (struct Shape *)malloc(sizeof(struct Shape));
+        *savedCurrentShapeValue = *currentShape;
+        bool savedShah = isShah;
+        int savedCurrentPlayer = currentPlayer;
+
+        GetPossibleSteps();
+
+        if (countOfPossible[0] != 0)
+        {
+                for (int i=0; i<countOfPossible[0]; i++)
+                {
+                        currentShape = savedCurrentShapeAddress;
+                        currentShape->point.x = possibleSteps[i].x;
+                        currentShape->point.y = possibleSteps[i].y;
+                        currentShape = emptyAddress;
+                        CheckShah();
+                        if (!isShah) {updatePossibleSteps[index[0]] = possibleSteps[i]; index[0]++;}
+                }
+        }
+        if (countOfPossible[1] != 0)
+        {
+                for (int i=0; i<countOfPossible[1]; i++)
+                {
+                        killedShape = GetObjectFromPoint(possibleEats[i]);
+                        if (killedShape != NULL){killedShape->isActive=false;}
+                        currentShape = savedCurrentShapeAddress;
+                        currentShape->point.x = possibleEats[i].x;
+                        currentShape->point.y = possibleEats[i].y;
+                        currentShape = emptyAddress;
+                        CheckShah();
+                        if (killedShape != NULL){killedShape->isActive=true;}
+                        if (!isShah) {updatePossibleEats[index[1]] = possibleEats[i]; index[1]++;}
+                }
+        }
+
+        for (int i=0; i<index[0]; i++)
+        {
+                possibleSteps[i] = updatePossibleSteps[i];
+        }
+        for (int i=0; i<index[1]; i++)
+        {
+                possibleEats[i] = updatePossibleEats[i];
+        }
+
+        countOfPossible[0] = index[0];
+        countOfPossible[1] = index[1];
+
+        //restore global state
+        currentShape = savedCurrentShapeAddress;
+        *currentShape = *savedCurrentShapeValue;
+        currentPlayer = savedCurrentPlayer;
+        isShah = savedShah;
+
+        free(killedShape);
+        free(updatePossibleSteps);
+        free(updatePossibleEats);
+}
+
+struct Shape* TForm1::GetObjectFromPoint(struct Point point)
+{
+        for (int i = 0; i < 2; i++)
+        {
+                for (int j = 0; j < 16; j++)
+                {
+                        if (shapes[i][j].isActive == true)
+                        {
+                                x = shapes[i][j].point.x;
+                                y = shapes[i][j].point.y;
+                                if (x == point.x && y == point.y)
+                                {
+                                        return &shapes[i][j];
+                                }
+                        }
+                }
+        }
+        return NULL;
+}
+
+void TForm1::CheckWinOrStandoff()
+{
+        bool saveShah = isShah;
+        
+        for (int i=0; i<16; i++)
+        {
+                currentShape = &shapes[currentPlayer][i];
+                if (!currentShape->isActive) {continue;}
+                CheckSteps();
+                if (countOfPossible[0] == 0 && countOfPossible[1] == 0) {isStandoff = true;}
+                else {isStandoff = false; break;}
+        }
+        isShah = saveShah;
+        if (isStandoff && isShah) {isStandoff = false; isWin = true;}
+}
+
