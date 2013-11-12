@@ -19,7 +19,11 @@ __published:	// IDE-managed Components
         TImage *View;
         void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
-private:	// User declarations
+        void __fastcall FormResize(TObject *Sender);
+        void __fastcall ViewMouseDown(TObject *Sender, TMouseButton Button,
+          TShiftState Shift, int X, int Y);
+private:
+        void __fastcall CreateParams(TCreateParams &Params);
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
         void Draw();

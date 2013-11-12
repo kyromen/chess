@@ -1,11 +1,9 @@
 object Form1: TForm1
-  Left = 457
-  Top = 188
-  AutoSize = True
-  BorderStyle = bsNone
+  Left = 353
+  Top = 142
+  Width = 464
+  Height = 486
   Caption = 'Form'
-  ClientHeight = 448
-  ClientWidth = 448
   Color = clBtnShadow
   TransparentColorValue = clNone
   Font.Charset = DEFAULT_CHARSET
@@ -16,6 +14,7 @@ object Form1: TForm1
   OldCreateOrder = False
   Visible = True
   OnKeyDown = FormKeyDown
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object View: TImage
@@ -23,6 +22,7 @@ object Form1: TForm1
     Top = 0
     Width = 448
     Height = 448
+    OnMouseDown = ViewMouseDown
   end
   object DeskSprites: TImageList
     AllocBy = 56

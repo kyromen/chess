@@ -39,10 +39,12 @@ bool isWin = false;
 Graphics::TBitmap *backgroundLayer = new Graphics::TBitmap;
 Graphics::TBitmap *shapesLayer = new Graphics::TBitmap;
 Graphics::TBitmap *transferLayer = new Graphics::TBitmap;
+Graphics::TBitmap *resizeLayer = new Graphics::TBitmap;
 Graphics::TBitmap *popupList = new Graphics::TBitmap;
 Graphics::TBitmap *popup = new Graphics::TBitmap;
 Graphics::TBitmap *bmpCurrent;
 
+int side = 448;
 int x, y; //readability++
 
 TForm1 *Form1;
@@ -51,24 +53,45 @@ TForm1 *Form1;
 __fastcall TForm1::TForm1(TComponent* Owner)
         : TForm(Owner)
 {
-        DoubleBuffered=true;
-        
-        backgroundLayer->Width=448;
-        backgroundLayer->Height=448;
-        shapesLayer->Width=448;
-        shapesLayer->Height=448;
-        shapesLayer->Transparent=true;
-        transferLayer->Width=448;
-        transferLayer->Height=448;
+        DoubleBuffered = true;
+        Form1->ClientWidth = 448;
+        Form1->ClientHeight = 448;
+        backgroundLayer->Width = 448;
+        backgroundLayer->Height = 448;
+        shapesLayer->Width = 448;
+        shapesLayer->Height = 448;
+        shapesLayer->Transparent = true;
+        transferLayer->Width = 448;
+        transferLayer->Height = 448;
+        resizeLayer->Width = 448;
+        resizeLayer->Width = 448;
         popupList->LoadFromFile("graphics/popup.bmp");
-        popupList->TransparentColor=clBlack;
-        popupList->Transparent=true;
-        popup->Width=190;
-        popup->Height=81;
-        popup->Transparent=true;
+        popupList->TransparentColor = clBlack;
+        popupList->Transparent = true;
+        popup->Width = 190;
+        popup->Height = 81;
+        popup->Transparent = true;
         NewGame();
 }
 
+void __fastcall TForm1::CreateParams(TCreateParams &Params)
+{
+        //form without title
+        TForm::CreateParams(Params);
+        Params.Style &= ~WS_DLGFRAME;
+        Params.Style |= WS_POPUP;
+}
+
+void __fastcall TForm1::ViewMouseDown(TObject *Sender, TMouseButton Button,
+      TShiftState Shift, int X, int Y)
+{
+        if(Button == mbLeft)
+        {
+                long SC_DRAGMOVE = 0xF012;
+                ReleaseCapture();
+                SendMessage(Form1->Handle, WM_SYSCOMMAND, SC_DRAGMOVE, 0);
+        }        
+}
 
 void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
       TShiftState Shift)
@@ -282,8 +305,11 @@ void TForm1::Draw()
         }
         if (isWin || isShah || isStandoff) {transferLayer->Canvas->Draw(448/2-190/2,448/2-81/2,popup);}
 
+        transferLayer->Canvas->CopyRect(Rect(0,0,side,side),transferLayer->Canvas,Rect(0,0,448,448));
+
         //all on view
         View->Canvas->Draw(0, 0, transferLayer);
+        //View->Canvas->CopyRect(Rect(0,0,Form1->Width,Form1->Height),resizeLayer->Canvas,Rect(0,0,448,448));
 }
 
 void TForm1::RedrawShapes()
@@ -483,7 +509,6 @@ void TForm1::GetPossibleSteps()
         countOfPossible[1] = index[1];
 }
 
-
 int TForm1::CheckPoint(struct Point point)
 {
         for (int i = 0; i < 2; i++)
@@ -652,7 +677,7 @@ struct Shape* TForm1::GetObjectFromPoint(struct Point point)
 void TForm1::CheckWinOrStandoff()
 {
         bool saveShah = isShah;
-        
+
         for (int i=0; i<16; i++)
         {
                 currentShape = &shapes[currentPlayer][i];
@@ -663,5 +688,29 @@ void TForm1::CheckWinOrStandoff()
         }
         isShah = saveShah;
         if (isStandoff && isShah) {isStandoff = false; isWin = true;}
+}
+
+void __fastcall TForm1::FormResize(TObject *Sender)
+{
+        //min size 448*448
+        if (Form1->Width < 448) {Form1->ClientWidth = 448; Form1->ClientHeight = 448; return;}
+
+        //square
+        Form1->ClientWidth > Form1->ClientHeight ? side = Form1->ClientWidth : side = Form1->ClientHeight;
+
+        //form
+        Form1->ClientWidth = side;
+        Form1->ClientHeight = side;
+
+        //view
+        View->Width = side;
+        View->Height = side;
+        View->Picture->Bitmap->Width = side;
+        View->Picture->Bitmap->Height = side;
+        transferLayer->Width = side;
+        transferLayer->Height = side;
+
+        //redraw
+        Draw();
 }
 
