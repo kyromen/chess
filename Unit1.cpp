@@ -310,7 +310,6 @@ void TForm1::Draw()
 
         //all on view
         View->Canvas->Draw(0, 0, transferLayer);
-        //View->Canvas->CopyRect(Rect(0,0,Form1->Width,Form1->Height),resizeLayer->Canvas,Rect(0,0,448,448));
 }
 
 void TForm1::RedrawShapes()
@@ -694,7 +693,10 @@ void TForm1::CheckWinOrStandoff()
 void __fastcall TForm1::FormResize(TObject *Sender)
 {
         //min size 448*448
-        if (Form1->Width < 448) {Form1->ClientWidth = 448; Form1->ClientHeight = 448; return;}
+        //if (Form1->Width < 448) {Form1->ClientWidth = 448; Form1->ClientHeight = 448; return;}
+
+        //Form1->Width = 500;
+        //Form1->Height = 500;
 
         //square
         Form1->ClientWidth > Form1->ClientHeight ? side = Form1->ClientWidth : side = Form1->ClientHeight;
@@ -708,8 +710,12 @@ void __fastcall TForm1::FormResize(TObject *Sender)
         View->Height = side;
         View->Picture->Bitmap->Width = side;
         View->Picture->Bitmap->Height = side;
-        transferLayer->Width = side;
-        transferLayer->Height = side;
+
+        if (side > 448)
+        {
+                transferLayer->Width = side;
+                transferLayer->Height = side;
+        }
 
         //redraw
         Draw();
