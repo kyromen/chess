@@ -1,9 +1,10 @@
 object Form1: TForm1
   Left = 353
   Top = 142
-  Width = 464
-  Height = 486
+  AutoScroll = False
   Caption = 'Form'
+  ClientHeight = 448
+  ClientWidth = 448
   Color = clBtnShadow
   TransparentColorValue = clNone
   Font.Charset = DEFAULT_CHARSET
