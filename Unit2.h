@@ -11,6 +11,7 @@ private:
 protected:
         void __fastcall Execute();
 public:
+        TNotifyEvent MyMethod;
         __fastcall Comm(bool CreateSuspended);
 };
 //---------------------------------------------------------------------------

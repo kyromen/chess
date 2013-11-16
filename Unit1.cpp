@@ -49,13 +49,16 @@ Graphics::TBitmap *bmpCurrent;
 int side = 448;
 int x, y; //readability++
 
+Comm *threadCom = new Comm(True);
+
 TForm1 *Form1;
 
 //---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
         : TForm(Owner)
 {
-        Comm threadCom = new Comm(True);
+        threadCom->MyMethod = ReadProc;
+        threadCom->Resume();
         DoubleBuffered = true;
         Form1->ClientWidth = 448;
         Form1->ClientHeight = 448;
@@ -94,7 +97,12 @@ void __fastcall TForm1::ViewMouseDown(TObject *Sender, TMouseButton Button,
                 long SC_DRAGMOVE = 0xF012;
                 ReleaseCapture();
                 SendMessage(Form1->Handle, WM_SYSCOMMAND, SC_DRAGMOVE, 0);
-        }        
+        }
+}
+
+void __fastcall TForm1::ReadProc(TObject *Sender)
+{
+        int a = 0;
 }
 
 void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
@@ -776,4 +784,3 @@ void __fastcall TForm1::FormResize(TObject *Sender)
         //redraw
         Draw();
 }
-

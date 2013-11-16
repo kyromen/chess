@@ -4,7 +4,7 @@
   <MACROS>
     <VERSION value="BCB.06.00"/>
     <PROJECT value="chess.exe"/>
-    <OBJFILES value="chess.obj Unit1.obj"/>
+    <OBJFILES value="chess.obj Unit1.obj Unit2.obj"/>
     <RESFILES value="chess.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -57,6 +57,7 @@
       <FILE FILENAME="chess.res" FORMNAME="" UNITNAME="chess.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="chess.cpp" FORMNAME="" UNITNAME="chess" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="Unit1.cpp" FORMNAME="Form1" UNITNAME="Unit1" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Unit2.cpp" FORMNAME="" UNITNAME="Unit2" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

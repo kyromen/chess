@@ -20,7 +20,7 @@
 //      }
 //---------------------------------------------------------------------------
 
-__fastcall Comm::Comm(bool CreateSuspended, HANDLE handle)
+__fastcall Comm::Comm(bool CreateSuspended)
         : TThread(CreateSuspended)
 {
 }
@@ -32,11 +32,16 @@ void __fastcall Comm::Execute()
         while (!Terminated)
         {
                 Sleep(1);
-                ClearCommError();
-                n = comstat.cbInQue
-                if (n != 0)
+                if (MyMethod != NULL)
                 {
+                        MyMethod(this);
                 }
+                //ClearCommError();
+                //n = comstat.cbInQue
+                //if (n != 0)
+                //{
+                //        Form1->readProc
+                //}
         }
         //---- Place thread code here ----
 }
