@@ -55,6 +55,7 @@ TForm1 *Form1;
 __fastcall TForm1::TForm1(TComponent* Owner)
         : TForm(Owner)
 {
+        Comm threadCom = new Comm(0);
         DoubleBuffered = true;
         Form1->ClientWidth = 448;
         Form1->ClientHeight = 448;
@@ -296,7 +297,7 @@ void TForm1::Draw()
         //castling
         if (castling && !firstStep[currentPlayer][0])
         {
-                transferLayer->Canvas->Brush->Color=clSilver;
+                transferLayer->Canvas->Brush->Color=clNavy;
                 x = shapes[currentPlayer][14+currentPlayer].point.x;
                 y = shapes[currentPlayer][14+currentPlayer].point.y;
                 transferLayer->Canvas->FillRect(Rect(x*56, y*56, (x+1)*56, (y+1)*56));

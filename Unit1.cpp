@@ -55,6 +55,7 @@ TForm1 *Form1;
 __fastcall TForm1::TForm1(TComponent* Owner)
         : TForm(Owner)
 {
+        Comm threadCom = new Comm(True);
         DoubleBuffered = true;
         Form1->ClientWidth = 448;
         Form1->ClientHeight = 448;
