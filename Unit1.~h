@@ -27,7 +27,7 @@ private:
         void __fastcall CreateParams(TCreateParams &Params);
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
-        void __fastcall ReadProc(TObject *Sender);
+        void __fastcall ReadProc(TObject *Sender, int a);
         void Draw();
         void RedrawShapes();
         void MoveShape();
@@ -37,6 +37,7 @@ public:		// User declarations
         void CheckShah();
         void CheckSteps();
         void CheckWinOrStandoff();
+        Action();
         struct Shape* GetObjectFromPoint(struct Point);
 };
 //---------------------------------------------------------------------------

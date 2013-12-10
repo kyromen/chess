@@ -1,0 +1,170 @@
+PCON EQU 87h
+F1 EQU 20H
+
+clr F1.0
+clr F1.2
+
+F2 EQU 28H
+MOV F2, #0
+
+ORG 0000h
+jmp main
+
+ORG 000Bh
+jmp PPTF0
+
+ORG 0023H
+jmp PPRI_TI
+
+
+ORG 1000h
+
+main:
+	call init
+	call init_int
+	
+	m1:
+		jmp m1
+
+init:
+	mov PCON, #10000000b
+	mov SCON, #01010000b
+	mov TMOD, #00100001b
+	mov TH0, #0
+	mov TL0, #0
+	mov TH1, #11110101b
+	mov TCON, #01010000b
+	
+ret
+
+init_int:
+	setb IE.7
+	setb IE.4
+	setb IE.1
+ret
+
+PPTF0:
+	push ACC
+	push PSW
+	
+	clr TR0	
+		call waiting
+		call keypad_input
+	setb TR0					
+	
+	pop PSW
+	pop ACC
+reti
+
+waiting:
+	mov R6,#255 ;2
+	zad1:
+		mov R7,#255 ;2
+		zad2: 
+			nop
+		djnz R7,zad2 ;2
+	djnz R6,zad1 ;2
+ret
+
+PPRI_TI:
+	jb TI, handle_TI
+reti
+
+handle_TI:
+	push ACC
+	push PSW
+	
+	clr TR0
+	clr TI
+	
+	jnb F1.2, exit
+		mov SBUF, R1
+		clr F1.2
+		setb TR0
+		
+		pop PSW
+		pop ACC
+		reti
+	exit:
+		setb TR0
+		
+		pop PSW
+		pop ACC
+		reti
+
+keypad_input:
+	mov P1, #0FFh
+	clr P1.0
+	jnb P1.4, keypad_print1
+	jnb P1.5, keypad_print4
+	jnb P1.6, keypad_print7
+	setb P1.0
+
+	clr P1.1
+	jnb P1.4, keypad_print2
+	jnb P1.5, keypad_print5
+	jnb P1.6, keypad_print8
+	setb P1.1
+	
+	clr P1.2
+	jnb P1.4, keypad_print3
+	jnb P1.5, keypad_print6
+	jnb P1.6, keypad_print9
+	setb P1.2
+ret
+	
+keypad_print2:
+	mov R1, #2
+	setb F1.2
+	setb TI
+ret
+	
+keypad_print5:
+	mov R1, #5
+	setb F1.2
+	setb TI
+ret
+
+keypad_print8:
+	mov R1, #8
+	setb F1.2
+	setb TI
+ret
+
+keypad_print1:
+	mov R1, #1
+	setb F1.2
+	setb TI
+ret
+
+keypad_print4:
+	mov R1, #4
+	setb F1.2
+	setb TI
+ret
+
+keypad_print7:
+	mov R1, #7
+	setb F1.2
+	setb TI
+ret
+
+keypad_print3:
+	mov R1, #3
+	setb F1.2
+	setb TI
+ret
+
+keypad_print6:
+	mov R1, #6
+	setb F1.2
+	setb TI
+ret
+	
+keypad_print9:
+	mov R1, #9
+	setb F1.2
+	setb TI
+ret
+	
+end

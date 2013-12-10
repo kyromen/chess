@@ -100,9 +100,22 @@ void __fastcall TForm1::ViewMouseDown(TObject *Sender, TMouseButton Button,
         }
 }
 
-void __fastcall TForm1::ReadProc(TObject *Sender)
+void __fastcall TForm1::ReadProc(TObject *Sender, int a)
 {
-        int a = 0;
+        switch(a)
+        {
+                case 1: if ((cursor.y > 0) && (cursor.x > 0)){cursor.y -= 1; cursor.x -= 1;} break;
+                case 2: if (cursor.y > 0){cursor.y -= 1;} break;
+                case 3: if ((cursor.y > 0) && (cursor.x < 7)){cursor.y -= 1; cursor.x += 1;} break;
+                case 4: if (cursor.x > 0){cursor.x -= 1;} break;
+                case 5: Action(); break;
+                case 6: if (cursor.x < 7){cursor.x += 1;} break;
+                case 7: if ((cursor.y < 7) && (cursor.x > 0)){cursor.y += 1; cursor.x -= 1;} break;
+                case 8: if (cursor.y < 7){cursor.y += 1;} break;
+                case 9: if ((cursor.y < 7) && (cursor.x < 7)){cursor.y += 1; cursor.x += 1;} break;
+        }
+        Draw();
+        isShah = false;
 }
 
 void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
@@ -117,59 +130,7 @@ void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key,
                 case VK_ESCAPE: Close(); break;
                 case 82: NewGame(); break;
                 case VK_SPACE:
-                        Shape * objectUnderCursor;
-                        objectUnderCursor = GetObjectFromPoint(cursor);
-                        if (objectUnderCursor != NULL) //shape under cursor
-                        {
-                                if (objectUnderCursor->player == currentPlayer)
-                                {
-                                        if (currentShape == NULL)
-                                        {
-                                                currentShape = objectUnderCursor;
-                                                CheckSteps();
-                                        }
-                                        else
-                                        {
-                                                countOfPossible[0] = 0;
-                                                countOfPossible[1] = 0;
-                                                if (cursor.x == currentShape->point.x && cursor.y == currentShape->point.y && !castling)
-                                                {
-                                                        currentShape = NULL;
-                                                }
-                                                else if (castling && objectUnderCursor->shapeId == 5) {MoveShape();}
-                                                else if (castling && currentShape->shapeId == 3) {currentShape = NULL; castling = false;}
-                                                else {currentShape = objectUnderCursor; CheckSteps();}
-                                        }
-                                }
-                                else if (objectUnderCursor->player != currentPlayer && currentShape != NULL)
-                                {
-                                        for (int i=0; i<countOfPossible[1]; i++)
-                                        {
-                                                x = possibleEats[i].x;
-                                                y = possibleEats[i].y;
-                                                if (cursor.x == x && cursor.y == y)
-                                                {
-                                                        objectUnderCursor->isActive=false; //delete shape
-                                                        MoveShape();
-                                                }
-                                        }
-                                }
-                        }
-                        else
-                        {
-                                if (currentShape != NULL && currentShape->player == currentPlayer)
-                                {
-                                        for (int i=0; i<countOfPossible[0]; i++)
-                                        {
-                                                x = possibleSteps[i].x;
-                                                y = possibleSteps[i].y;
-                                                if (cursor.x == x && cursor.y == y)
-                                                {
-                                                        MoveShape();
-                                                }
-                                        }
-                                }
-                        }
+                        Action();
         }
         Draw();
         isShah = false;
@@ -783,4 +744,61 @@ void __fastcall TForm1::FormResize(TObject *Sender)
 
         //redraw
         Draw();
+}
+
+TForm1::Action()
+{
+        Shape * objectUnderCursor;
+                        objectUnderCursor = GetObjectFromPoint(cursor);
+                        if (objectUnderCursor != NULL) //shape under cursor
+                        {
+                                if (objectUnderCursor->player == currentPlayer)
+                                {
+                                        if (currentShape == NULL)
+                                        {
+                                                currentShape = objectUnderCursor;
+                                                CheckSteps();
+                                        }
+                                        else
+                                        {
+                                                countOfPossible[0] = 0;
+                                                countOfPossible[1] = 0;
+                                                if (cursor.x == currentShape->point.x && cursor.y == currentShape->point.y && !castling)
+                                                {
+                                                        currentShape = NULL;
+                                                }
+                                                else if (castling && objectUnderCursor->shapeId == 5) {MoveShape();}
+                                                else if (castling && currentShape->shapeId == 3) {currentShape = NULL; castling = false;}
+                                                else {currentShape = objectUnderCursor; CheckSteps();}
+                                        }
+                                }
+                                else if (objectUnderCursor->player != currentPlayer && currentShape != NULL)
+                                {
+                                        for (int i=0; i<countOfPossible[1]; i++)
+                                        {
+                                                x = possibleEats[i].x;
+                                                y = possibleEats[i].y;
+                                                if (cursor.x == x && cursor.y == y)
+                                                {
+                                                        objectUnderCursor->isActive=false; //delete shape
+                                                        MoveShape();
+                                                }
+                                        }
+                                }
+                        }
+                        else
+                        {
+                                if (currentShape != NULL && currentShape->player == currentPlayer)
+                                {
+                                        for (int i=0; i<countOfPossible[0]; i++)
+                                        {
+                                                x = possibleSteps[i].x;
+                                                y = possibleSteps[i].y;
+                                                if (cursor.x == x && cursor.y == y)
+                                                {
+                                                        MoveShape();
+                                                }
+                                        }
+                                }
+                        }
 }
