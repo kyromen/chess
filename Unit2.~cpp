@@ -70,7 +70,7 @@ void __fastcall Comm::Execute()
 
         while (1)
         {
-        if (ReadFile( HandlerCom, &data, 1, &actlen, NULL ) && actlen)
+         if (ReadFile( HandlerCom, &data, 1, &actlen, NULL ) && actlen)
         {
                 if (MyMethod!=NULL) this->MyMethod(this, int(data));
                 getch();

@@ -28,7 +28,7 @@ __fastcall Comm::Comm(bool CreateSuspended)
 //---------------------------------------------------------------------------
 void __fastcall Comm::Execute()
 {
-        AnsiString Port = "COM4"; 
+        AnsiString Port = "COM3"; 
         COMMCONFIG CommConfig;
         DWORD dwSize = sizeof(CommConfig);
 
